@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Como está o clima do time?</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; padding: 20px; }
+    select, button, input[type="password"] { padding: 10px; font-size: 16px; margin: 10px; }
+    .mood { display: inline-block; margin: 15px; width: 100px; height: 100px; border-radius: 50%; cursor: pointer; line-height: 100px; color: white; font-weight: bold; font-size: 50px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s; }
+    .mood:hover { transform: scale(1.1); }
+    .op1 { background-color: #28a745; } .op2 { background-color: #007bff; } .op3 { background-color: #ffc107; color: black; } .op4 { background-color: #dc3545; }
+    #login, #resultados, #acoes { margin-top: 30px; display: none; }
+    canvas { max-width: 400px; margin: auto; }
+  </style>
+</head>
+<body>
+  <h1>Como está o seu dia hoje?</h1>
+  <label for="setor">Selecione seu setor:</label>
+  <select id="setor">
+    <option value="">-- Escolha --</option>
+    <option value="administrativo">Administrativo</option>
+    <option value="expedicao">Expedição</option>
+    <option value="rh">RH</option>
+    <option value="fiscal">Fiscal</option>
+    <option value="fabrica">Fábrica</option>
+    <option value="engenharia">Engenharia</option>
+    <option value="manutencao">Manutenção</option>
+    <option value="comercial">Comercial</option>
+    <option value="apoio">Apoio</option>
+  </select>
+
+  <div id="moods">
+    <div class="mood op1" onclick="registrar('op1')">😀</div>
+    <div class="mood op2" onclick="registrar('op2')">🙂</div>
+    <div class="mood op3" onclick="registrar('op3')">😐</div>
+    <div class="mood op4" onclick="registrar('op4')">🙁</div>
+  </div>
+
+  <button onclick="mostrarLogin()">🔒 Acesso Restrito</button>
+
+  <div id="login">
+    <p>Digite a senha:</p>
+    <input type="password" id="senha">
+    <button onclick="verResultados()">Ver Resultados</button>
+  </div>
+
+  <div id="acoes">
+    <button onclick="exportarPDF()">📄 Exportar PDF</button>
+  </div>
+
+  <div id="resultados"></div>
+
+  <script>
+    const senhaCorreta = "Duroline001*";
+    const API_URL = "https://SEU_WORKER_URL_AQUI";
+
+    function registrar(sentimento) {
+      const setor = document.getElementById("setor").value;
+      if (!setor) return alert("Selecione o setor");
+      fetch(API_URL + "/registrar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ setor, sentimento })
+      })
+      .then(res => res.text())
+      .then(msg => {
+        alert(msg);
+        document.getElementById("setor").value = "";
+      });
+    }
+
+    function mostrarLogin() {
+      document.getElementById("login").style.display = "block";
+    }
+
+    function verResultados() {
+      const senha = document.getElementById("senha").value;
+      if (senha !== senhaCorreta) return alert("Senha incorreta!");
+      fetch(API_URL + "/resultados")
+        .then(res => res.json())
+        .then(data => mostrarGraficos(data));
+    }
+
+    function mostrarGraficos(data) {
+      const setores = [...new Set(data.map(r => r.setor))];
+      const container = document.getElementById("resultados");
+      container.innerHTML = "<h2>Resultados por Setor</h2>";
+      setores.forEach(setor => {
+        const grupo = data.filter(d => d.setor === setor);
+        const valores = ['op1','op2','op3','op4'].map(k => {
+          const item = grupo.find(g => g.sentimento === k);
+          return item ? item.total : 0;
+        });
+
+        const div = document.createElement("div");
+        div.innerHTML = `<h3>${setor}</h3><canvas id="chart_${setor}"></canvas><hr>`;
+        container.appendChild(div);
+
+        new Chart(document.getElementById(`chart_${setor}`), {
+          type: 'pie',
+          data: {
+            labels: ['excelente', 'bom', 'neutro', 'ruim'],
+            datasets: [{
+              data: valores,
+              backgroundColor: ['#28a745', '#007bff', '#ffc107', '#dc3545']
+            }]
+          },
+          options: {
+            plugins: { legend: { position: 'bottom' } }
+          }
+        });
+      });
+      document.getElementById("resultados").style.display = "block";
+      document.getElementById("acoes").style.display = "block";
+    }
+
+    function exportarPDF() {
+      alert("Função de exportar ainda será ativada.");
+    }
+  </script>
+</body>
+</html>

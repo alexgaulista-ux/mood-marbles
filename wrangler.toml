@@ -1,0 +1,7 @@
+name = "mood-marbles-api"
+compatibility_date = "2024-08-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "mood_marbles"
+database_id = "ad234e68-4b3a-4309-a4c1-e4cd58029739"  # <-- Substitua depois com seu ID real
