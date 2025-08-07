@@ -4,10 +4,7 @@ export default {
 
     if (request.method === "POST" && url.pathname === "/registrar") {
       const { setor, sentimento } = await request.json();
-
-      if (!setor || !sentimento) {
-        return new Response("Dados inválidos", { status: 400 });
-      }
+      if (!setor || !sentimento) return new Response("Dados inválidos", { status: 400 });
 
       await env.DB.prepare(
         "INSERT INTO registros (setor, sentimento) VALUES (?, ?)"
@@ -18,9 +15,7 @@ export default {
 
     if (request.method === "GET" && url.pathname === "/resultados") {
       const { results } = await env.DB.prepare(
-        `SELECT setor, sentimento, COUNT(*) as total
-         FROM registros
-         GROUP BY setor, sentimento`
+        `SELECT setor, sentimento, COUNT(*) as total FROM registros GROUP BY setor, sentimento`
       ).all();
 
       return new Response(JSON.stringify(results), {
