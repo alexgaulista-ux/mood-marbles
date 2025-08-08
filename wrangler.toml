@@ -1,4 +1,4 @@
-name = "mood-marbles-api"
+name = "mood-marbles-api1"
 main = "worker.js"
 compatibility_date = "2024-08-01"
 
