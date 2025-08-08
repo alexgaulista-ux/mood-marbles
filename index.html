@@ -122,9 +122,56 @@
       document.getElementById("acoes").style.display = "block";
     }
 
-    function exportarPDF() {
-      alert("Função de exportar ainda será ativada.");
+  /**
+ * Generates a PDF report of the results.
+ */
+function gerarPDF() {
+  const document = new jsPDF();
+
+  document.text("Relatório de Clima por Setor", 20, 20);
+
+  let y = 30;
+  sectors.forEach(setor => {
+    let total = 0;
+    const dados = moodIds.map(moodId => {
+      const val = parseInt(DB.getItem(`${setor}_${moodId}`)) || 0;
+      total += val;
+      return val;
+    });
+
+    document.setFontSize(12);
+    document.text(`${setor.charAt(0).toUpperCase() + setor.slice(1)}:`, 20, y);
+    y += 8;
+    moods.forEach((mood, i) => {
+      const perc = total > 0 ? ((dados[i] / total) * 100).toFixed(1) : 0;
+      document.setFontSize(10);
+      document.text(`  ${mood.emoji} ${mood.label}: ${dados[i]} (${perc}%)`, 25, y);
+      y += 6;
+    });
+    y += 4;
+    if (y > document.internal.pageSize.height - 30) { // Check if new page is needed
+        document.addPage();
+        y = 20; // Reset y for new page
     }
+  });
+
+  document.save("relatorio_clima_setores.pdf");
+}
+
+/**
+ * Clears all stored data from DB.
+ */
+function limparDados() {
+  if (confirm("Tem certeza que deseja limpar todos os dados? Esta ação é irreversível.")) {
+    sectors.forEach(setor => {
+      moodIds.forEach(moodId => {
+        DB.removeItem(`${setor}_${moodId}`);
+      });
+    });
+    alert("Dados apagados com sucesso.");
+    location.reload(); // Reload the page to reset the UI
+  }
+}
   </script>
 </body>
 </html>
