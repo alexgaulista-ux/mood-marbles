@@ -60,22 +60,6 @@ export default {
 
 
 
-  function exportarPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  const data = await fetch(API_URL + "/resultados").then(r => r.json());
-  doc.setFontSize(16);
-  doc.text("Relatório - Mood Marbles", 10, 10);
-
-  let y = 20;
-  data.forEach(item => {
-    doc.setFontSize(12);
-    doc.text(`${item.setor} - ${item.sentimento}: ${item.total}`, 10, y);
-    y += 8;
-  });
-
-  doc.save("relatorio.pdf");
-}
+ 
 
 };
