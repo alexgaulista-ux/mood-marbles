@@ -116,9 +116,34 @@
       document.getElementById("acoes").style.display = "block";
     }
 
-    function exportarPDF() {
-      alert("Função de exportar ainda será ativada.");
-    }
+    const API_URL = "https://mood-marbles-api1.alexgaulista.workers.dev";
+
+async function exportarPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  // Captura do gráfico Chart.js
+  const graficoCanvas = document.getElementById("grafico");
+  if (graficoCanvas) {
+    const imgData = graficoCanvas.toDataURL("image/png", 1.0);
+    doc.addImage(imgData, "PNG", 10, 10, 180, 80);
+  }
+
+  // Título e lista de votos
+  let y = graficoCanvas ? 100 : 20;
+  doc.setFontSize(16);
+  doc.text("Relatório - Mood Marbles", 10, y);
+  y += 10;
+
+  const data = await fetch(API_URL + "/resultados").then(r => r.json());
+  data.forEach(item => {
+    doc.setFontSize(12);
+    doc.text(`${item.setor} - ${item.sentimento}: ${item.total}`, 10, y);
+    y += 8;
+  });
+
+  doc.save("relatorio.pdf");
+}
   </script>
 </body>
 </html>
