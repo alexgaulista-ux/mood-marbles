@@ -116,38 +116,24 @@
       document.getElementById("acoes").style.display = "block";
     }
 
- function exportarPDF() {
+ async function exportarPDF() {
+  const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
-  doc.text("Relatório de Clima por Setor", 20, 20);
+  const data = await fetch(API_URL + "/resultados").then(r => r.json());
+  doc.setFontSize(16);
+  doc.text("Relatório - Mood Marbles", 10, 10);
 
-  let y = 30;
-  sectors.forEach(setor => {
-    let total = 0;
-    const dados = moodIds.map(moodId => {
-      const val = parseInt(localStorage.getItem(`${setor}_${moodId}`)) || 0;
-      total += val;
-      return val;
-    });
-
+  let y = 20;
+  data.forEach(item => {
     doc.setFontSize(12);
-    doc.text(`${setor.charAt(0).toUpperCase() + setor.slice(1)}:`, 20, y);
+    doc.text(`${item.setor} - ${item.sentimento}: ${item.total}`, 10, y);
     y += 8;
-    moods.forEach((mood, i) => {
-      const perc = total > 0 ? ((dados[i] / total) * 100).toFixed(1) : 0;
-      doc.setFontSize(10);
-      doc.text(`  ${mood.emoji} ${mood.label}: ${dados[i]} (${perc}%)`, 25, y);
-      y += 6;
-    });
-    y += 4;
-    if (y > doc.internal.pageSize.height - 30) { // Check if new page is needed
-        doc.addPage();
-        y = 20; // Reset y for new page
-    }
   });
 
-  doc.save("relatorio_clima_setores.pdf");
+  doc.save("relatorio.pdf");
 }
+
 
   </script>
 </body>
