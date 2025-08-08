@@ -14,7 +14,6 @@
     canvas { max-width: 400px; margin: auto; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 </head>
 <body>
@@ -119,22 +118,22 @@
       document.getElementById("acoes").style.display = "block";
     }
 
- const API_URL = "https://mood-marbles-api1.alexgaulista.workers.dev";
+ <script>
+const API_URL = "https://mood-marbles-api1.alexgaulista.workers.dev";
 
- async function exportarPDF() {
+async function exportarPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
-  // Captura gráfico (supondo que ele esteja num elemento com id="grafico")
-  const grafico = document.getElementById("grafico");
-  if (grafico) {
-    const canvas = await html2canvas(grafico);
-    const imgData = canvas.toDataURL("image/png");
+  // Captura do gráfico Chart.js
+  const graficoCanvas = document.getElementById("grafico");
+  if (graficoCanvas) {
+    const imgData = graficoCanvas.toDataURL("image/png", 1.0);
     doc.addImage(imgData, "PNG", 10, 10, 180, 80);
   }
 
-  // Adiciona título e dados do banco
-  let y = grafico ? 100 : 20;
+  // Título e lista de votos
+  let y = graficoCanvas ? 100 : 20;
   doc.setFontSize(16);
   doc.text("Relatório - Mood Marbles", 10, y);
   y += 10;
@@ -148,7 +147,7 @@
 
   doc.save("relatorio.pdf");
 }
-  
-  </script>
+</script>
+
 </body>
 </html>
