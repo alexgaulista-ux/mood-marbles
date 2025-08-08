@@ -53,7 +53,7 @@
 
   <script>
     const senhaCorreta = "Duroline001*";
-    const API_URL = const API_URL = "https://mood-marbles-api1.alexgaulista.workers.dev";
+    const API_URL = "https://mood-marbles-api1.alexgaulista.workers.dev";
 
     function registrar(sentimento) {
       const setor = document.getElementById("setor").value;
@@ -63,11 +63,12 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ setor, sentimento })
       })
-      .then(res => res.text())
-      .then(msg => {
-        alert(msg);
-        document.getElementById("setor").value = "";
-      });
+      .then(res => res.json())
+    .then(data => {
+    alert(data.mensagem || "Registro realizado!");
+    document.getElementById("setor").value = "";
+    });
+
     }
 
     function mostrarLogin() {
