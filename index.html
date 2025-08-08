@@ -116,23 +116,13 @@
       document.getElementById("acoes").style.display = "block";
     }
 
- async function exportarPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+ <div id="acoes">
+    <button id="generatePdfBtn">📄 Exportar PDF</button>
+  </div>
 
-  const data = await fetch(API_URL + "/resultados").then(r => r.json());
-  doc.setFontSize(16);
-  doc.text("Relatório - Mood Marbles", 10, 10);
+  <div id="resultados"></div>
 
-  let y = 20;
-  data.forEach(item => {
-    doc.setFontSize(12);
-    doc.text(`${item.setor} - ${item.sentimento}: ${item.total}`, 10, y);
-    y += 8;
-  });
-
-  doc.save("relatorio.pdf");
-}
+  <script type="module" src="worker.js"></script>
 
 
   </script>
