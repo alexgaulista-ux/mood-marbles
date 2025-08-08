@@ -9,7 +9,7 @@
     select, button, input[type="password"] { padding: 10px; font-size: 16px; margin: 10px; }
     .mood { display: inline-block; margin: 15px; width: 100px; height: 100px; border-radius: 50%; cursor: pointer; line-height: 100px; color: white; font-weight: bold; font-size: 50px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s; }
     .mood:hover { transform: scale(1.1); }
-    .op1 { background-color: #28a745; } .op2 { background-color: #007bff; } .op3 { background-color: #ffc107; color: black; } .op4 { background-color: #dc3545; }
+    .op1 { background-color: #28a745; } .op2 { background-color: #007bff; } .op3 { background-color: #ffc107; color: black; } .op4 { background-color: #dc3545; } .op5 { background-color: #8B0000; }
     #login, #resultados, #acoes { margin-top: 30px; display: none; }
     canvas { max-width: 400px; margin: auto; }
   </style>
@@ -35,6 +35,12 @@
     <div class="mood op2" onclick="registrar('op2')">🙂</div>
     <div class="mood op3" onclick="registrar('op3')">😐</div>
     <div class="mood op4" onclick="registrar('op4')">🙁</div>
+    <div class="mood op5" onclick="registrar('op5')">😠</div>
+
+
+
+
+
   </div>
 
   <button onclick="mostrarLogin()">🔒 Acesso Restrito</button>
@@ -89,7 +95,7 @@
       container.innerHTML = "<h2>Resultados por Setor</h2>";
       setores.forEach(setor => {
         const grupo = data.filter(d => d.setor === setor);
-        const valores = ['op1','op2','op3','op4'].map(k => {
+        const valores = ['op1','op2','op3','op4','op5'].map(k => {
           const item = grupo.find(g => g.sentimento === k);
           return item ? item.total : 0;
         });
@@ -101,10 +107,10 @@
         new Chart(document.getElementById(`chart_${setor}`), {
           type: 'pie',
           data: {
-            labels: ['excelente', 'bom', 'neutro', 'ruim'],
+            labels: ['excelente', 'bom', 'neutro', 'ruim', 'raiva'],
             datasets: [{
               data: valores,
-              backgroundColor: ['#28a745', '#007bff', '#ffc107', '#dc3545']
+              backgroundColor: ['#28a745', '#007bff', '#ffc107', '#dc3545', '#8B0000']
             }]
           },
           options: {
@@ -116,13 +122,8 @@
       document.getElementById("acoes").style.display = "block";
     }
 
-// Função para exportar PDF
-  async function exportarPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    doc.save("relatorio.pdf");
-    
+    function exportarPDF() {
+      alert("Função de exportar ainda será ativada.");
     }
   </script>
 </body>
