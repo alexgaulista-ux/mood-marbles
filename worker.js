@@ -60,7 +60,7 @@ export default {
 
 
 
-  async function exportarPDF() {
+  function exportarPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
