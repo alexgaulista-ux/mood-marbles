@@ -13,6 +13,9 @@
     #login, #resultados, #acoes { margin-top: 30px; display: none; }
     canvas { max-width: 400px; margin: auto; }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
 </head>
 <body>
   <h1>Como está o seu dia hoje?</h1>
@@ -116,10 +119,35 @@
       document.getElementById("acoes").style.display = "block";
     }
 
- function exportarPDF() {
-      alert(worker.js,"Exportado com sucesso");
-    }
+ const API_URL = "https://mood-marbles-api1.alexgaulista.workers.dev";
 
+ async function exportarPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  // Captura gráfico (supondo que ele esteja num elemento com id="grafico")
+  const grafico = document.getElementById("grafico");
+  if (grafico) {
+    const canvas = await html2canvas(grafico);
+    const imgData = canvas.toDataURL("image/png");
+    doc.addImage(imgData, "PNG", 10, 10, 180, 80);
+  }
+
+  // Adiciona título e dados do banco
+  let y = grafico ? 100 : 20;
+  doc.setFontSize(16);
+  doc.text("Relatório - Mood Marbles", 10, y);
+  y += 10;
+
+  const data = await fetch(API_URL + "/resultados").then(r => r.json());
+  data.forEach(item => {
+    doc.setFontSize(12);
+    doc.text(`${item.setor} - ${item.sentimento}: ${item.total}`, 10, y);
+    y += 8;
+  });
+
+  doc.save("relatorio.pdf");
+}
   
   </script>
 </body>
