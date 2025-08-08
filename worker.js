@@ -62,7 +62,7 @@ export default {
 /**
  * Generates a PDF report of the results by fetching data from the API.
  */
-async function gerarPDF() {
+async function exportarPDF() {
   console.log("[Gerar PDF] Iniciando geração de PDF...");
   const doc = new jsPDF();
 
