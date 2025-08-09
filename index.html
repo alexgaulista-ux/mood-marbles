@@ -1,3 +1,14 @@
+
+<div id="loginArea" style="text-align:center; margin-top:50px;">
+  <h2>Login</h2>
+  <form id="loginForm">
+    <input type="text" id="usuario" placeholder="Usuário" required style="padding:10px; margin:5px;">
+    <input type="password" id="senha" placeholder="Senha" required style="padding:10px; margin:5px;">
+    <button type="submit" style="padding:10px 20px;">Entrar</button>
+  </form>
+</div>
+
+<div id="app" style="display:none;">
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -14,18 +25,7 @@
     canvas { max-width: 400px; margin: auto; }
   </style>
 </head>
-
 <body>
-<div id="loginArea" style="text-align:center; margin-top:50px;">
-  <h2>Login</h2>
-  <form id="loginForm">
-    <input type="text" id="usuario" placeholder="Usuário" required>
-    <input type="password" id="senha" placeholder="Senha" required>
-    <button type="submit">Entrar</button>
-  </form>
-</div>
-<div id="app" style="display:none;">
-
   <h1>Como está o seu dia hoje?</h1>
   <label for="setor">Selecione seu setor:</label>
   <select id="setor">
@@ -69,7 +69,7 @@
   <div id="resultados"></div>
 
   <script>
-    
+    const senhaCorreta = "Duroline001*";
     const API_URL = "https://mood-marbles-api1.alexgaulista.workers.dev";
 
     function registrar(sentimento) {
@@ -184,51 +184,31 @@ function limparDados() {
   }
 }
   </script>
-
-</div> <!-- fecha app -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script>
-const API_URL = "https://SEU_WORKER.workers.dev"; // Troque pelo seu Worker
-
-document.getElementById("loginForm").addEventListener("submit", async function(e) {
-    e.preventDefault();
-    const usuario = document.getElementById("usuario").value;
-    const senha = document.getElementById("senha").value;
-
-    const resp = await fetch(API_URL + "/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ usuario, senha })
-    });
-    const data = await resp.json();
-
-    if (data.sucesso) {
-        document.getElementById("loginArea").style.display = "none";
-        document.getElementById("app").style.display = "block";
-    } else {
-        alert(data.mensagem || "Usuário ou senha inválidos");
-    }
-});
-
-async function gerarPDF() {
-    const resp = await fetch(API_URL + "/resultados");
-    const dados = await resp.json();
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    doc.setFontSize(16);
-    doc.text("Relatório de Votos", 10, 10);
-
-    let y = 20;
-    dados.forEach(item => {
-        doc.text(`${item.setor} - ${item.sentimento}`, 10, y);
-        y += 10;
-    });
-
-    doc.save("relatorio.pdf");
-}
-</script>
-
 </body>
 </html>
+
+</div>
+<script>
+const API_URL = "https://SEU_WORKER.workers.dev"; // Troque pelo seu Worker real
+
+document.getElementById("loginForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+  const usuario = document.getElementById("usuario").value;
+  const senha = document.getElementById("senha").value;
+
+  const resp = await fetch(API_URL + "/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ usuario, senha })
+  });
+
+  const data = await resp.json();
+
+  if (data.sucesso) {
+    document.getElementById("loginArea").style.display = "none";
+    document.getElementById("app").style.display = "block";
+  } else {
+    alert("Usuário ou senha incorretos");
+  }
+});
+</script>
