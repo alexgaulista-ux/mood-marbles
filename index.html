@@ -1,14 +1,4 @@
-<div id="loginArea">
-  <h2>Login</h2>
-  <form id="loginForm">
-    <input type="text" id="usuario" placeholder="Usuário" required>
-    <input type="password" id="senha" placeholder="Senha" required>
-    <button type="submit">Entrar</button>
-  </form>
-</div>
-
-<div id="app" style="display:none;">
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
@@ -47,16 +37,29 @@
     <div class="mood op4" onclick="registrar('op4')">🙁</div>
     <div class="mood op5" onclick="registrar('op5')">😠</div>
 
+
+
+
+
   </div>
 
-    <div id="acoes">
+  <button onclick="mostrarLogin()">🔒 Acesso Restrito</button>
+
+  <div id="login">
+    <p>Digite a senha:</p>
+    <input type="password" id="senha">
+    <button onclick="verResultados()">Ver Resultados</button>
+  </div>
+
+  <div id="acoes">
     <button onclick="exportarPDF()">📄 Exportar PDF</button>
   </div>
 
   <div id="resultados"></div>
 
   <script>
-    
+    const senhaCorreta = "Duroline001*";
+    const API_URL = "https://mood-marbles-api1.alexgaulista.workers.dev";
 
     function registrar(sentimento) {
       const setor = document.getElementById("setor").value;
@@ -170,34 +173,5 @@ function limparDados() {
   }
 }
   </script>
-
-
-</div>
-
-<script>
-const API_URL = "https://mood-marbles-api1.alexgaulista.workers.dev"; // Troque pelo seu link do Worker
-
-document.getElementById("loginForm").addEventListener("submit", async function(e) {
-  e.preventDefault();
-  const usuario = document.getElementById("usuario").value;
-  const senha = document.getElementById("senha").value;
-
-  const resp = await fetch(API_URL + "/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ usuario, senha })
-  });
-
-  const data = await resp.json();
-
-  if (data.sucesso) {
-    document.getElementById("loginArea").style.display = "none";
-    document.getElementById("app").style.display = "block";
-  } else {
-    alert("Usuário ou senha incorretos");
-  }
-});
-</script>
-
-  </body>
+</body>
 </html>
