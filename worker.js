@@ -1,62 +1,37 @@
-onexport default {
-  async fetch(request, env, ctx) {
+export default {
+  async fetch(request, env) {
     const url = new URL(request.url);
+    const path = url.pathname;
 
-    // Função para respostas com CORS
-    const jsonResponse = (data, status = 200) =>
-      new Response(
-        typeof data === "string" ? data : JSON.stringify(data),
-        {
-          status,
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type"
-          }
-        }
-      );
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    };
 
-    // Tratar pré-requisições OPTIONS (CORS)
     if (request.method === "OPTIONS") {
-      return jsonResponse("ok", 200);
+      return new Response(null, { headers: corsHeaders });
     }
 
-    // Rota para registrar sentimento
-    if (request.method === "POST" && url.pathname === "/registrar") {
-      try {
-        const { setor, sentimento } = await request.json();
-        if (!setor || !sentimento) {
-          return jsonResponse({ erro: "Dados inválidos" }, 400);
-        }
+    // LOGIN
+    if (path === "/login" && request.method === "POST") {
+      const { usuario, senha } = await request.json();
+      const { results } = await env.DB
+        .prepare("SELECT * FROM usuarios WHERE usuario = ? AND senha = ?")
+        .bind(usuario, senha)
+        .all();
 
-        await env.DB.prepare(
-          "INSERT INTO registros (setor, sentimento) VALUES (?, ?)"
-        ).bind(setor, sentimento).run();
-
-        return jsonResponse({ sucesso: true, mensagem: "Registrado com sucesso" });
-      } catch (err) {
-        return jsonResponse({ erro: err.message }, 500);
+      if (results.length > 0) {
+        return new Response(JSON.stringify({ sucesso: true }), {
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      } else {
+        return new Response(JSON.stringify({ sucesso: false, mensagem: "Credenciais inválidas" }), {
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
       }
     }
 
-    // Rota para obter resultados
-    if (request.method === "GET" && url.pathname === "/resultados") {
-      try {
-        const { results } = await env.DB.prepare(
-          `SELECT setor, sentimento, COUNT(*) as total
-           FROM registros
-           GROUP BY setor, sentimento`
-        ).all();
-
-        return jsonResponse(results);
-      } catch (err) {
-        return jsonResponse({ erro: err.message }, 500);
-      }
-    }
-
-    return jsonResponse({ erro: "Rota não encontrada" }, 404);
-  }
- 
-
+    return new Response("Rota não encontrada", { status: 404, headers: corsHeaders });
+  },
 };
