@@ -46,7 +46,18 @@
     <input type="text" id="usuario">
     <p>Senha:</p>
     <input type="password" id="senha">
-    <p></p><button onclick="verResultados()">Ver Resultados</button></p>
+
+    <p>
+      <label for="filtro_data">Filtrar por período:</label>
+      <select id="filtro_data">
+        <option value="hoje">Hoje</option>
+        <option value="semana">Últimos 7 dias</option>
+        <option value="todos" selected>Todos</option>
+      </select>
+    </p>
+
+    <button onclick="verResultados()">Ver Resultados</button>
+    <button onclick="limparRegistros()" style="margin-left: 15px; background-color: #dc3545; color: white;">🗑️ Limpar Registros</button>
   </div>
 
   <div id="acoes">
@@ -80,6 +91,12 @@
     async function verResultados() {
       const usuario = document.getElementById("usuario").value;
       const senha = document.getElementById("senha").value;
+      const filtro = document.getElementById("filtro_data").value;
+
+      if (!usuario || !senha) {
+        alert("Informe usuário e senha para ver resultados.");
+        return;
+      }
 
       const resp = await fetch(API_URL + "/login", {
         method: "POST",
@@ -90,18 +107,19 @@
 
       if (!data.sucesso) return alert("Usuário ou senha incorretos!");
 
-      const res = await fetch(API_URL + "/resultados");
+      const res = await fetch(API_URL + `/resultados?filtro=${filtro}`);
       const resultados = await res.json();
       mostrarGraficos(resultados);
     }
 
     function mostrarGraficos(data) {
+      const sentimentos = ['excelente', 'bom', 'neutro', 'ruim', 'raiva'];
       const setores = [...new Set(data.map(r => r.setor))];
       const container = document.getElementById("resultados");
       container.innerHTML = "<h2>Resultados por Setor</h2>";
       setores.forEach(setor => {
         const grupo = data.filter(d => d.setor === setor);
-        const valores = ['excelente', 'bom', 'neutro', 'ruim', 'raiva'].map(k => {
+        const valores = sentimentos.map(k => {
           const item = grupo.find(g => g.sentimento === k);
           return item ? item.total : 0;
         });
@@ -113,7 +131,7 @@
         new Chart(document.getElementById(`chart_${setor}`), {
           type: 'pie',
           data: {
-            labels: ['excelente', 'bom', 'neutro', 'ruim', 'raiva'],
+            labels: sentimentos,
             datasets: [{
               data: valores,
               backgroundColor: ['#28a745', '#007bff', '#ffc107', '#dc3545', '#8B0000']
@@ -131,10 +149,12 @@
       const doc = new jsPDF();
       doc.text("Relatório de Clima por Setor", 20, 20);
 
-      const resp = await fetch(API_URL + "/resultados");
+      const filtro = document.getElementById("filtro_data")?.value || "todos";
+      const resp = await fetch(API_URL + `/resultados?filtro=${filtro}`);
       const data = await resp.json();
       let y = 30;
 
+      const sentimentos = ['excelente', 'bom', 'neutro', 'ruim', 'raiva'];
       const setores = [...new Set(data.map(r => r.setor))];
       setores.forEach(setor => {
         const grupo = data.filter(d => d.setor === setor);
@@ -144,10 +164,12 @@
         doc.text(`${setor.toUpperCase()}:`, 20, y);
         y += 8;
 
-        grupo.forEach(item => {
+        sentimentos.forEach(sent => {
+          const item = grupo.find(g => g.sentimento === sent);
+          if (!item) return;
           const perc = total > 0 ? ((item.total / total) * 100).toFixed(1) : 0;
           doc.setFontSize(10);
-          doc.text(`  ${item.sentimento}: ${item.total} (${perc}%)`, 25, y);
+          doc.text(`  ${sent}: ${item.total} (${perc}%)`, 25, y);
           y += 6;
         });
 
@@ -156,6 +178,39 @@
       });
 
       doc.save("relatorio_clima_setores.pdf");
+    }
+
+    async function limparRegistros() {
+      if (!confirm("Tem certeza que deseja apagar todos os registros?")) return;
+
+      const usuario = document.getElementById("usuario").value;
+      const senha = document.getElementById("senha").value;
+
+      if (!usuario || !senha) {
+        alert("Informe usuário e senha para limpar registros.");
+        return;
+      }
+
+      // Login para autenticar
+      const resp = await fetch(API_URL + "/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usuario, senha })
+      });
+      const data = await resp.json();
+      if (!data.sucesso) return alert("Usuário ou senha incorretos!");
+
+      // Chama endpoint limpar
+      const res = await fetch(API_URL + "/limpar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usuario })
+      });
+      const result = await res.json();
+      alert(result.mensagem || "Registros apagados!");
+
+      document.getElementById("resultados").style.display = "none";
+      document.getElementById("acoes").style.display = "none";
     }
   </script>
 </body>
