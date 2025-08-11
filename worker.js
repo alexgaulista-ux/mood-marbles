@@ -1,8 +1,7 @@
-onexport default {
+export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    // Função para respostas com CORS
     const jsonResponse = (data, status = 200) =>
       new Response(
         typeof data === "string" ? data : JSON.stringify(data),
@@ -17,12 +16,31 @@ onexport default {
         }
       );
 
-    // Tratar pré-requisições OPTIONS (CORS)
     if (request.method === "OPTIONS") {
       return jsonResponse("ok", 200);
     }
 
-    // Rota para registrar sentimento
+    // Login
+    if (request.method === "POST" && url.pathname === "/login") {
+      try {
+        const { usuario, senha } = await request.json();
+        if (!usuario || !senha) return jsonResponse({ sucesso: false, erro: "Dados inválidos" }, 400);
+
+        const { results } = await env.DB.prepare(
+          "SELECT * FROM usuarios WHERE usuario = ? AND senha = ?"
+        ).bind(usuario, senha).all();
+
+        if (results.length > 0) {
+          return jsonResponse({ sucesso: true });
+        } else {
+          return jsonResponse({ sucesso: false });
+        }
+      } catch (err) {
+        return jsonResponse({ erro: err.message }, 500);
+      }
+    }
+
+    // Registrar sentimento
     if (request.method === "POST" && url.pathname === "/registrar") {
       try {
         const { setor, sentimento } = await request.json();
@@ -40,7 +58,7 @@ onexport default {
       }
     }
 
-    // Rota para obter resultados
+    // Resultados
     if (request.method === "GET" && url.pathname === "/resultados") {
       try {
         const { results } = await env.DB.prepare(
@@ -57,6 +75,4 @@ onexport default {
 
     return jsonResponse({ erro: "Rota não encontrada" }, 404);
   }
- 
-
 };
