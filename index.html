@@ -101,7 +101,7 @@
       container.innerHTML = "<h2>Resultados por Setor</h2>";
       setores.forEach(setor => {
         const grupo = data.filter(d => d.setor === setor);
-        const valores = ['Excelente','op2','op3','op4','op5'].map(k => {
+        const valores = ['op1','op2','op3','op4','op5'].map(k => {
           const item = grupo.find(g => g.sentimento === k);
           return item ? item.total : 0;
         });
