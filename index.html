@@ -10,7 +10,7 @@
     select, button, input[type="password"], input[type="text"] { padding: 10px; font-size: 16px; margin: 10px; }
     .mood { display: inline-block; margin: 15px; width: 100px; height: 100px; border-radius: 50%; cursor: pointer; line-height: 100px; color: white; font-weight: bold; font-size: 50px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s; }
     .mood:hover { transform: scale(1.1); }
-    .excelente { background-color: #28a745; } .op2 { background-color: #007bff; } .op3 { background-color: #ffc107; color: black; } .op4 { background-color: #dc3545; } .op5 { background-color: #8B0000; }
+    .op1 { background-color: #28a745; } .op2 { background-color: #007bff; } .op3 { background-color: #ffc107; color: black; } .op4 { background-color: #dc3545; } .op5 { background-color: #8B0000; }
     #login, #resultados, #acoes { margin-top: 30px; display: none; }
     canvas { max-width: 400px; margin: auto; }
   </style>
@@ -101,7 +101,7 @@
       container.innerHTML = "<h2>Resultados por Setor</h2>";
       setores.forEach(setor => {
         const grupo = data.filter(d => d.setor === setor);
-        const valores = ['op1','op2','op3','op4','op5'].map(k => {
+        const valores = ['Excelente','op2','op3','op4','op5'].map(k => {
           const item = grupo.find(g => g.sentimento === k);
           return item ? item.total : 0;
         });
