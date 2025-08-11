@@ -2,26 +2,21 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    // LOGIN já implementado
-    if (request.method === "POST" && url.pathname === "/login") {
-      const { usuario, senha } = await request.json();
-      if (!usuario || !senha) {
-        return new Response(JSON.stringify({ sucesso: false, erro: "Dados inválidos" }), {
-          headers: { "Content-Type": "application/json" },
-          status: 400
-        });
+    // Função para autenticar admin
+    async function autenticarAdmin(request) {
+      try {
+        const { usuario, senha } = await request.json();
+        if (!usuario || !senha) return false;
+        const { results } = await env.DB.prepare(
+          "SELECT 1 FROM usuarios WHERE usuario = ? AND senha = ? AND role = 'admin'"
+        ).bind(usuario, senha).all();
+        return results.length > 0;
+      } catch {
+        return false;
       }
-
-      const { results } = await env.DB.prepare(
-        "SELECT 1 FROM usuarios WHERE usuario = ? AND senha = ?"
-      ).bind(usuario, senha).all();
-
-      return new Response(JSON.stringify({ sucesso: results.length > 0 }), {
-        headers: { "Content-Type": "application/json" }
-      });
     }
 
-    // REGISTRAR sentimento com timestamp
+    // REGISTRAR (votação pública, sem autenticação)
     if (request.method === "POST" && url.pathname === "/registrar") {
       const { setor, sentimento } = await request.json();
       if (!setor || !sentimento) {
@@ -30,23 +25,61 @@ export default {
           headers: { "Content-Type": "application/json" }
         });
       }
-
       const data_registro = new Date().toISOString();
-
       await env.DB.prepare(
         "INSERT INTO registros (setor, sentimento, data_registro) VALUES (?, ?, ?)"
       ).bind(setor, sentimento, data_registro).run();
 
-      return new Response(JSON.stringify({ mensagem: "Registro salvo com sucesso!" }), {
+      return new Response(JSON.stringify({ mensagem: "Voto registrado com sucesso!" }), {
         headers: { "Content-Type": "application/json" }
       });
     }
 
-    // RESULTADOS filtrados por período
-    if (request.method === "GET" && url.pathname === "/resultados") {
-      // verifica query param filtro: hoje, semana, todos
-      const filtro = url.searchParams.get("filtro") || "todos";
+    // LOGIN para admin (verifica se usuário é admin)
+    if (request.method === "POST" && url.pathname === "/login") {
+      const { usuario, senha } = await request.json();
+      if (!usuario || !senha) {
+        return new Response(JSON.stringify({ sucesso: false, erro: "Dados inválidos" }), {
+          headers: { "Content-Type": "application/json" },
+          status: 400
+        });
+      }
+      const { results } = await env.DB.prepare(
+        "SELECT 1 FROM usuarios WHERE usuario = ? AND senha = ? AND role = 'admin'"
+      ).bind(usuario, senha).all();
 
+      return new Response(JSON.stringify({ sucesso: results.length > 0 }), {
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
+    // RESULTADOS - protegido, só admin
+    if (request.method === "GET" && url.pathname === "/resultados") {
+      // Aqui precisa autenticar admin via headers ou query (ex: Basic Auth, token, ou no corpo)
+      // Como é GET, não tem corpo, vamos exigir Basic Auth no header Authorization
+
+      const auth = request.headers.get("Authorization");
+      if (!auth || !auth.startsWith("Basic ")) {
+        return new Response(JSON.stringify({ erro: "Não autorizado" }), { status: 401, headers: { "Content-Type": "application/json" } });
+      }
+      // Decodificar base64
+      const base64Credentials = auth.split(" ")[1];
+      const credentials = atob(base64Credentials);
+      const [usuario, senha] = credentials.split(":");
+      if (!usuario || !senha) {
+        return new Response(JSON.stringify({ erro: "Não autorizado" }), { status: 401, headers: { "Content-Type": "application/json" } });
+      }
+
+      const { results } = await env.DB.prepare(
+        "SELECT 1 FROM usuarios WHERE usuario = ? AND senha = ? AND role = 'admin'"
+      ).bind(usuario, senha).all();
+
+      if (results.length === 0) {
+        return new Response(JSON.stringify({ erro: "Não autorizado" }), { status: 401, headers: { "Content-Type": "application/json" });
+      }
+
+      // Se autorizado, retorna dados filtrados
+      const filtro = url.searchParams.get("filtro") || "todos";
       let filtroSQL = "";
       const agora = new Date();
 
@@ -65,14 +98,14 @@ export default {
         GROUP BY setor, sentimento
       `;
 
-      const { results } = await env.DB.prepare(query).all();
+      const dados = await env.DB.prepare(query).all();
 
-      return new Response(JSON.stringify(results), {
+      return new Response(JSON.stringify(dados.results), {
         headers: { "Content-Type": "application/json" }
       });
     }
 
-    // LIMPAR registros, exige POST e usuário autenticado
+    // LIMPAR registros - só admin, POST
     if (request.method === "POST" && url.pathname === "/limpar") {
       const { usuario, senha } = await request.json();
       if (!usuario || !senha) {
@@ -81,10 +114,8 @@ export default {
           headers: { "Content-Type": "application/json" }
         });
       }
-
-      // Verifica login
       const { results } = await env.DB.prepare(
-        "SELECT 1 FROM usuarios WHERE usuario = ? AND senha = ?"
+        "SELECT 1 FROM usuarios WHERE usuario = ? AND senha = ? AND role = 'admin'"
       ).bind(usuario, senha).all();
 
       if (results.length === 0) {
@@ -103,4 +134,4 @@ export default {
 
     return new Response("Endpoint não encontrado", { status: 404 });
   }
-}
+};
