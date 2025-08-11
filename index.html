@@ -12,6 +12,7 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <meta charset="UTF-8">
   <title>Como está o clima do time?</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -136,52 +137,38 @@
   /**
  * Generates a PDF report of the results.
  */
-function gerarPDF() {
-  const document = new jsPDF();
+async function gerarPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
 
-  document.text("Relatório de Clima por Setor", 20, 20);
+  doc.text("Relatório de Clima por Setor", 20, 20);
+
+  const resp = await fetch(API_URL + "/resultados");
+  const data = await resp.json();
 
   let y = 30;
-  sectors.forEach(setor => {
-    let total = 0;
-    const dados = moodIds.map(moodId => {
-      const val = parseInt(DB.getItem(`${setor}_${moodId}`)) || 0;
-      total += val;
-      return val;
-    });
+  const setores = [...new Set(data.map(r => r.setor))];
+  setores.forEach(setor => {
+    const grupo = data.filter(d => d.setor === setor);
+    let total = grupo.reduce((sum, g) => sum + g.total, 0);
 
-    document.setFontSize(12);
-    document.text(`${setor.charAt(0).toUpperCase() + setor.slice(1)}:`, 20, y);
+    doc.setFontSize(12);
+    doc.text(`${setor.toUpperCase()}:`, 20, y);
     y += 8;
-    moods.forEach((mood, i) => {
-      const perc = total > 0 ? ((dados[i] / total) * 100).toFixed(1) : 0;
-      document.setFontSize(10);
-      document.text(`  ${mood.emoji} ${mood.label}: ${dados[i]} (${perc}%)`, 25, y);
+    grupo.forEach(item => {
+      const perc = total > 0 ? ((item.total / total) * 100).toFixed(1) : 0;
+      doc.setFontSize(10);
+      doc.text(`  ${item.sentimento}: ${item.total} (${perc}%)`, 25, y);
       y += 6;
     });
     y += 4;
-    if (y > document.internal.pageSize.height - 30) { // Check if new page is needed
-        document.addPage();
-        y = 20; // Reset y for new page
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
     }
   });
 
-  document.save("relatorio_clima_setores.pdf");
-}
-
-/**
- * Clears all stored data from DB.
- */
-function limparDados() {
-  if (confirm("Tem certeza que deseja limpar todos os dados? Esta ação é irreversível.")) {
-    sectors.forEach(setor => {
-      moodIds.forEach(moodId => {
-        DB.removeItem(`${setor}_${moodId}`);
-      });
-    });
-    alert("Dados apagados com sucesso.");
-    location.reload(); // Reload the page to reset the UI
-  }
+  doc.save("relatorio_clima_setores.pdf");
 }
   </script>
 </body>
@@ -189,7 +176,7 @@ function limparDados() {
 
 </div>
 <script>
-const API_URL = "https://SEU_WORKER.workers.dev"; // Troque pelo seu Worker real
+const API_URL = "https://mood-marbles-api1.alexgaulista.workers.dev"; // Troque pelo seu Worker real
 
 document.getElementById("loginForm").addEventListener("submit", async function(e) {
   e.preventDefault();
