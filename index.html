@@ -1,18 +1,6 @@
-
-<div id="loginArea" style="text-align:center; margin-top:50px;">
-  <h2>Login</h2>
-  <form id="loginForm">
-    <input type="text" id="usuario" placeholder="Usuário" required style="padding:10px; margin:5px;">
-    <input type="password" id="senha" placeholder="Senha" required style="padding:10px; margin:5px;">
-    <button type="submit" style="padding:10px 20px;">Entrar</button>
-  </form>
-</div>
-
-<div id="app" style="display:none;">
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <meta charset="UTF-8">
   <title>Como está o clima do time?</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -21,7 +9,7 @@
     select, button, input[type="password"] { padding: 10px; font-size: 16px; margin: 10px; }
     .mood { display: inline-block; margin: 15px; width: 100px; height: 100px; border-radius: 50%; cursor: pointer; line-height: 100px; color: white; font-weight: bold; font-size: 50px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s; }
     .mood:hover { transform: scale(1.1); }
-    .op1 { background-color: #28a745; } .op2 { background-color: #007bff; } .op3 { background-color: #ffc107; color: black; } .op4 { background-color: #dc3545; } .op5 { background-color: #8B0000; }
+    .op1 { background-color: #28a745; } .op2 { background-color: #007bff; } .op3 { background-color: #ffc107; color: black; } .op4 { background-color: #dc3545; }
     #login, #resultados, #acoes { margin-top: 30px; display: none; }
     canvas { max-width: 400px; margin: auto; }
   </style>
@@ -47,12 +35,6 @@
     <div class="mood op2" onclick="registrar('op2')">🙂</div>
     <div class="mood op3" onclick="registrar('op3')">😐</div>
     <div class="mood op4" onclick="registrar('op4')">🙁</div>
-    <div class="mood op5" onclick="registrar('op5')">😠</div>
-
-
-
-
-
   </div>
 
   <button onclick="mostrarLogin()">🔒 Acesso Restrito</button>
@@ -71,7 +53,7 @@
 
   <script>
     const senhaCorreta = "Duroline001*";
-    const API_URL = "https://mood-marbles-api1.alexgaulista.workers.dev";
+    const API_URL = "https://mood-marbles-api.alexgaulista-ux.workers.dev";
 
     function registrar(sentimento) {
       const setor = document.getElementById("setor").value;
@@ -81,12 +63,11 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ setor, sentimento })
       })
-      .then(res => res.json())
-    .then(data => {
-    alert(data.mensagem || "Registro realizado!");
-    document.getElementById("setor").value = "";
-    });
-
+      .then(res => res.text())
+      .then(msg => {
+        alert(msg);
+        document.getElementById("setor").value = "";
+      });
     }
 
     function mostrarLogin() {
@@ -107,7 +88,7 @@
       container.innerHTML = "<h2>Resultados por Setor</h2>";
       setores.forEach(setor => {
         const grupo = data.filter(d => d.setor === setor);
-        const valores = ['op1','op2','op3','op4','op5'].map(k => {
+        const valores = ['op1','op2','op3','op4'].map(k => {
           const item = grupo.find(g => g.sentimento === k);
           return item ? item.total : 0;
         });
@@ -119,10 +100,10 @@
         new Chart(document.getElementById(`chart_${setor}`), {
           type: 'pie',
           data: {
-            labels: ['excelente', 'bom', 'neutro', 'ruim', 'raiva'],
+            labels: ['excelente', 'bom', 'neutro', 'ruim'],
             datasets: [{
               data: valores,
-              backgroundColor: ['#28a745', '#007bff', '#ffc107', '#dc3545', '#8B0000']
+              backgroundColor: ['#28a745', '#007bff', '#ffc107', '#dc3545']
             }]
           },
           options: {
@@ -134,68 +115,9 @@
       document.getElementById("acoes").style.display = "block";
     }
 
-  /**
- * Generates a PDF report of the results.
- */
-async function gerarPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  doc.text("Relatório de Clima por Setor", 20, 20);
-
-  const resp = await fetch(API_URL + "/resultados");
-  const data = await resp.json();
-
-  let y = 30;
-  const setores = [...new Set(data.map(r => r.setor))];
-  setores.forEach(setor => {
-    const grupo = data.filter(d => d.setor === setor);
-    let total = grupo.reduce((sum, g) => sum + g.total, 0);
-
-    doc.setFontSize(12);
-    doc.text(`${setor.toUpperCase()}:`, 20, y);
-    y += 8;
-    grupo.forEach(item => {
-      const perc = total > 0 ? ((item.total / total) * 100).toFixed(1) : 0;
-      doc.setFontSize(10);
-      doc.text(`  ${item.sentimento}: ${item.total} (${perc}%)`, 25, y);
-      y += 6;
-    });
-    y += 4;
-    if (y > 270) {
-      doc.addPage();
-      y = 20;
+    function exportarPDF() {
+      alert("Função de exportar ainda será ativada.");
     }
-  });
-
-  doc.save("relatorio_clima_setores.pdf");
-}
   </script>
 </body>
 </html>
-
-</div>
-<script>
-const API_URL = "https://mood-marbles-api1.alexgaulista.workers.dev"; // Troque pelo seu Worker real
-
-document.getElementById("loginForm").addEventListener("submit", async function(e) {
-  e.preventDefault();
-  const usuario = document.getElementById("usuario").value;
-  const senha = document.getElementById("senha").value;
-
-  const resp = await fetch(API_URL + "/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ usuario, senha })
-  });
-
-  const data = await resp.json();
-
-  if (data.sucesso) {
-    document.getElementById("loginArea").style.display = "none";
-    document.getElementById("app").style.display = "block";
-  } else {
-    alert("Usuário ou senha incorretos");
-  }
-});
-</script>
